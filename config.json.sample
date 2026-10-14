@@ -1,0 +1,4 @@
+{
+    "freesurfer": "testdata/brad/output",
+    "track": "testdata/brad/tract.10k.tck"
+}
