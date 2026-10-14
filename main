@@ -1,33 +1,40 @@
 #!/bin/bash
-#PBS -l nodes=1:ppn=4,vmem=28gb,walltime=12:00:00
-#PBS -N wmaSeg
+#PBS -l nodes=1:ppn=8,vmem=32gb,walltime=12:00:00
+#PBS -N wmaSeg-python
 
-rm -rf tracts
-
-[ -z "$FREESURFER_LICENSE" ] && echo "Please set FREESURFER_LICENSE in .bashrc" && exit 1;
+[ -z "$FREESURFER_LICENSE" ] && echo "Please set FREESURFER_LICENSE in .bashrc" && exit 1
 echo $FREESURFER_LICENSE > license.txt
 
 set -e
 set -x
 
-if [ ! -f aparc+aseg.nii.gz ]; then
-    echo "converting aparc.a2009+aseg file to nifti"
-    singularity exec -e -B `pwd`/license.txt:/usr/local/freesurfer/license.txt \
-        docker://brainlife/freesurfer-mini:6.0.1 ./convertaseg.sh
+export SINGULARITYENV_LC_ALL=C.UTF-8
+export SINGULARITYENV_LANG=C.UTF-8
+
+# 1. Convert FreeSurfer parcellation to NIfTI (skip if already done)
+if [ ! -f aparc.a2009s+aseg.nii.gz ]; then
+    echo "Converting aparc.a2009s+aseg to NIfTI..."
+    singularity exec -e \
+        -B "$(pwd)/license.txt:/usr/local/freesurfer/license.txt" \
+        docker://brainlife/freesurfer-mini:6.0.1 \
+        ./convertaseg.sh
 fi
 
-echo "running segmentation"
-singularity exec -e docker://brainlife/mcr:r2019a ./compiled/main
+# 2. Run white matter segmentation (Python port of wma_tools)
+echo "Running white matter segmentation..."
+singularity exec -e \
+    docker://brainlife/pythonvtk:1.1 \
+    python3 main.py
+
 if [ ! -s classification/classification.mat ]; then
-	echo "output missing"
-	exit 1
+    echo "ERROR: classification/classification.mat is missing or empty"
+    exit 1
 fi
 
-#TODO - will be deprecated soon by wmc datatype validator
-echo "Generating surfaces/ vtk from aparc+aseg.mgz"
-time singularity exec -e docker://brainlife/pythonvtk:1.1 ./freesurfer2vtks.py
+# 3. Generate VTK surfaces from parcellation
+echo "Generating VTK surfaces..."
+singularity exec -e \
+    docker://brainlife/pythonvtk:1.1 \
+    ./freesurfer2vtks.py
 
-#cp labels.json classification
-#cp aparc.a2009s+aseg.nii.gz classification/parc.nii.gz
-
-echo "all done"
+echo "All done."

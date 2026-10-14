@@ -1,0 +1,8 @@
+config.json
+classification/
+aparc+aseg.nii.gz
+aparc.a2009s+aseg.nii.gz
+license.txt
+__pycache__/
+*.py[cod]
+.singularity/

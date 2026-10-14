@@ -1,0 +1,39 @@
+{
+  "name": "app-wmaSeg-python",
+  "github": "gamorosino/app-wmaSeg-python",
+  "github_branch": "main",
+  "desc": "White matter tract segmentation (Python port of wma_tools). Segments a whole-brain tractogram into named white matter tracts using a FreeSurfer parcellation atlas.",
+  "config": {
+    "track": { "type": "input", "file_id": "track", "input_id": "track" },
+    "freesurfer": { "type": "input", "file_id": "output", "input_id": "freesurfer" }
+  },
+  "inputs": [
+    {
+      "id": "track",
+      "desc": "Whole-brain tractogram (TCK format)",
+      "datatype": "neuro/track/tck",
+      "datatype_tags": [],
+      "optional": false,
+      "multi": false,
+      "advanced": false
+    },
+    {
+      "id": "freesurfer",
+      "desc": "FreeSurfer output directory (aparc.a2009s+aseg parcellation required)",
+      "datatype": "neuro/freesurfer",
+      "datatype_tags": [],
+      "optional": false,
+      "multi": false,
+      "advanced": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "classification",
+      "desc": "White matter tract classification: classification.mat, per-tract JSON files, and VTK surfaces.",
+      "datatype": "neuro/wmc",
+      "datatype_tags": [],
+      "archive": true
+    }
+  ]
+}
