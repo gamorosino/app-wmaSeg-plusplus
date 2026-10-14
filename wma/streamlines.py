@@ -196,7 +196,7 @@ def _intersects_roi(stream, tree, distance, endpoint_only=False):
         nodes = np.array([stream[:, 0], stream[:, -1]])  # (2, 3)
     else:
         nodes = stream.T  # (N, 3)
-    dists, _ = tree.query(nodes, k=1, workers=1)
+    dists, _ = tree.query(nodes, k=1)
     return bool(np.any(dists <= distance))
 
 
@@ -263,10 +263,10 @@ def tract_by_endpoint_rois(streamlines, roi1, roi2, min_dist=0.87):
     tree1 = cKDTree(roi1["coords"])
     tree2 = cKDTree(roi2["coords"])
 
-    d1e1, _ = tree1.query(ep1, k=1, workers=1)
-    d1e2, _ = tree1.query(ep2, k=1, workers=1)
-    d2e1, _ = tree2.query(ep1, k=1, workers=1)
-    d2e2, _ = tree2.query(ep2, k=1, workers=1)
+    d1e1, _ = tree1.query(ep1, k=1)
+    d1e2, _ = tree1.query(ep2, k=1)
+    d2e1, _ = tree2.query(ep1, k=1)
+    d2e2, _ = tree2.query(ep2, k=1)
 
     keep = (
         ((d1e1 < min_dist) & (d2e2 < min_dist)) |
@@ -285,7 +285,7 @@ def midpoint_roi_segment(streamlines, roi, dist_threshold=0.5):
     if len(roi["coords"]) == 0:
         return np.zeros(len(streamlines), dtype=bool)
     tree = cKDTree(roi["coords"])
-    dists, _ = tree.query(mids, k=1, workers=1)
+    dists, _ = tree.query(mids, k=1)
     return dists <= dist_threshold
 
 
