@@ -23,7 +23,7 @@ fi
 # 2. Run white matter segmentation (Python port of wma_tools)
 echo "Running white matter segmentation..."
 singularity exec -e \
-    docker://brainlife/pythonvtk:1.1 \
+    docker://brainlife/dipy:1.1.1 \
     python3 main.py
 
 if [ ! -s classification/classification.mat ]; then
