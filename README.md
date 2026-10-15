@@ -1,7 +1,7 @@
 [![Abcdspec-compliant](https://img.shields.io/badge/ABCD_Spec-v1.1-green.svg)](https://github.com/brain-life/abcd-spec)
 [![Run on Brainlife.io](https://img.shields.io/badge/Brainlife-bl.app.6acfe9b83db9ceda5263760f-blue.svg)](https://brainlife.io/app/6acfe9b83db9ceda5263760f)
 
-# wmaSeg++
+# White Matter Anatomy Segmentation++ (wmaSeg++)
 
 `wmaSeg++` extends the white matter anatomy segmentation methodology of [Bullock et al. (2019)](https://doi.org/10.1007/s00429-019-01907-8) — originally implemented in MATLAB via the [wma_tools](https://github.com/DanNBullock/wma_tools) toolbox — with two major advances:
 
