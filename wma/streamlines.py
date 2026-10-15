@@ -200,6 +200,28 @@ def _intersects_roi(stream, tree, distance, endpoint_only=False):
     return bool(np.any(dists <= distance))
 
 
+def _batch_hits(streamlines, current_idx, tree, dist, endpoint_only):
+    """Vectorized: one batched tree.query over all surviving streamlines."""
+    n_local = len(current_idx)
+    if endpoint_only:
+        ep1 = np.vstack([streamlines[i][:, 0] for i in current_idx])
+        ep2 = np.vstack([streamlines[i][:, -1] for i in current_idx])
+        nodes = np.vstack([ep1, ep2])
+        s_ids = np.tile(np.arange(n_local, dtype=np.int32), 2)
+    else:
+        parts = [streamlines[i].T for i in current_idx]
+        nodes = np.concatenate(parts, axis=0)
+        s_ids = np.repeat(
+            np.arange(n_local, dtype=np.int32),
+            [p.shape[0] for p in parts],
+        )
+    raw_dists = tree.query(nodes, k=1)[0]
+    within = raw_dists <= dist
+    hit_counts = np.zeros(n_local, dtype=np.int32)
+    np.add.at(hit_counts, s_ids, within.astype(np.int32))
+    return hit_counts > 0
+
+
 def segment_fascicle_from_connectome(streamlines, rois, operations):
     """Apply AND/NOT/endpoints operations sequentially to streamlines.
 
@@ -234,10 +256,7 @@ def segment_fascicle_from_connectome(streamlines, rois, operations):
         tree = cKDTree(roi_coords)
         endpoint_only = op_norm in ("endpoints", "both_endpoints")
 
-        hits = np.array([
-            _intersects_roi(streamlines[i], tree, dist, endpoint_only)
-            for i in current_idx
-        ])
+        hits = _batch_hits(streamlines, current_idx, tree, dist, endpoint_only)
 
         if op_norm == "not":
             current_idx = current_idx[~hits]

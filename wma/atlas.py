@@ -91,6 +91,8 @@ _INFLATE_TARG_ROIS_BASE = _WM_ROIS + [2000, 1000, 999]
 _INFLATE_SOURCE_SET = frozenset(_GREY_MATTER_ROIS + _SUBCORTICAL_ROIS)
 _INFLATE_TARG_SET_BASE = frozenset(_INFLATE_TARG_ROIS_BASE)
 
+_inflate_cache: dict = {}
+
 
 def _assign_neighbor_label(data, x, y, z, targ_set, radius=1):
     """Pick the most-common non-target label in a (2r+1)^3 cube."""
@@ -113,8 +115,18 @@ def _assign_neighbor_label(data, x, y, z, targ_set, radius=1):
 def inflate_labels(atlas, inflate_itr):
     """Iteratively inflate grey matter labels into adjacent WM/unknown voxels.
 
-    Mirrors bsc_inflateLabels.
+    Mirrors bsc_inflateLabels. Results are cached by atlas data identity so
+    repeated calls with the same atlas are free.
     """
+    key = (id(atlas["data"]), inflate_itr)
+    if key in _inflate_cache:
+        return _inflate_cache[key]
+    result = _inflate_labels_impl(atlas, inflate_itr)
+    _inflate_cache[key] = result
+    return result
+
+
+def _inflate_labels_impl(atlas, inflate_itr):
     # First deisland with replace_val=999
     atlas_iter = deisland_labels(atlas, max_isle_size=5, replace_val=999)
     data = atlas_iter["data"]
@@ -169,7 +181,7 @@ def inflate_labels(atlas, inflate_itr):
 # ---------------------------------------------------------------------------
 
 def atlas_roi_nums_from_coords(atlas, coords_acpc):
-    """Return atlas label at each ACPC coordinate using 3×3×3 neighborhood.
+    """Return atlas label at each ACPC coordinate.
 
     coords_acpc : (3, N) or (N, 3) array in mm ACPC space.
     Returns     : (N,) integer array of atlas label IDs.
@@ -182,38 +194,27 @@ def atlas_roi_nums_from_coords(atlas, coords_acpc):
     data = atlas["data"]
     shape = np.array(data.shape)
 
-    # Transform ACPC → voxel (0-indexed, floor)
-    img_coords = np.floor(_xform_coords(qto_ijk, coords)).astype(int)  # (N, 3)
+    img_coords = np.floor(_xform_coords(qto_ijk, coords)).astype(int)
+    img_coords = np.clip(img_coords, 0, shape - 1)
 
-    n = len(img_coords)
-    roi_nums = np.zeros(n, dtype=np.int32)
+    # Vectorized direct lookup
+    roi_nums = data[img_coords[:, 0], img_coords[:, 1], img_coords[:, 2]].astype(np.int32)
 
-    for i in range(n):
-        ic = img_coords[i]
-        # Clamp to valid range
-        ic = np.clip(ic, 1, shape - 2)
-        x, y, z = ic
-
-        def _best_label(cube):
-            flat = cube.ravel()
-            vals, counts = np.unique(flat, return_counts=True)
-            winners = vals[counts == counts.max()]
-            return winners[0] if len(winners) == 1 else None
-
-        cube = data[x-1:x+2, y-1:y+2, z-1:z+2]
-        lbl = _best_label(cube)
-
-        # Tiebreaker: expand window
-        r = 1
-        while lbl is None and r < 5:
-            r += 1
-            x0, x1 = max(0, x - r), min(shape[0], x + r + 1)
-            y0, y1 = max(0, y - r), min(shape[1], y + r + 1)
-            z0, z1 = max(0, z - r), min(shape[2], z + r + 1)
-            cube = data[x0:x1, y0:y1, z0:z1]
-            lbl = _best_label(cube)
-
-        roi_nums[i] = int(lbl) if lbl is not None else 0
+    # Fallback: neighborhood expansion only for zero-labeled voxels
+    zero_mask = roi_nums == 0
+    if zero_mask.any():
+        for i in np.where(zero_mask)[0]:
+            x, y, z = img_coords[i]
+            for r in range(1, 5):
+                x0, x1 = max(0, x - r), min(shape[0], x + r + 1)
+                y0, y1 = max(0, y - r), min(shape[1], y + r + 1)
+                z0, z1 = max(0, z - r), min(shape[2], z + r + 1)
+                cube = data[x0:x1, y0:y1, z0:z1].ravel()
+                nonzero = cube[cube > 0]
+                if len(nonzero) > 0:
+                    vals, counts = np.unique(nonzero, return_counts=True)
+                    roi_nums[i] = vals[counts.argmax()]
+                    break
 
     return roi_nums
 
