@@ -18,13 +18,12 @@ _SUB_CORT_IDS = [[5, 12, 13, 17, 18], [44, 51, 52, 53, 54]]
 
 
 def segment_mdlf_ilf(streamlines, atlas, category_prior):
-    """Segment left/right ILF, MDLFang, MDLFspl."""
+    """Segment left/right ILF and MDLFang."""
     n = len(streamlines)
     inflated = inflate_labels(atlas, 2)
 
     cls_ilf = _empty_classification(n)
     cls_mdlf_ang = _empty_classification(n)
-    cls_mdlf_spl = _empty_classification(n)
 
     for leftright in [0, 1]:
         sidenum = 10000 + (leftright + 1) * 1000
@@ -111,15 +110,8 @@ def segment_mdlf_ilf(streamlines, atlas, category_prior):
             mdlf_ind, remove_mdlf_ind, ~bad_midpoints_a, ~bad_midpoints_b, ~spl_ind,
             temporo_parietal_bool,
         )
-        cls_mdlf_spl = concat_classification_criteria(
-            cls_mdlf_spl,
-            f"{_SIDE_LABELS[leftright]}MDLFspl",
-            mdlf_ind, remove_mdlf_ind, ~bad_midpoints_a, ~bad_midpoints_b, spl_ind,
-            temporo_parietal_bool,
-        )
 
     base = _empty_classification(n)
     out = reconcile_classifications(base, cls_ilf)
     out = reconcile_classifications(out, cls_mdlf_ang)
-    out = reconcile_classifications(out, cls_mdlf_spl)
     return out

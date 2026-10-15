@@ -19,27 +19,6 @@ def segment_cerebellar_tracts(streamlines, atlas, experimental_bool, category_pr
     classification = _empty_classification(n)
     inflated = inflate_labels(atlas, 2)
 
-    left_cb_roi = roi_from_atlas_nums(inflated, _CB_ROI_NUMS[0], smooth_kernel=1)
-    right_cb_roi = roi_from_atlas_nums(inflated, _CB_ROI_NUMS[1], smooth_kernel=1)
-
-    left_ceb_bool = segment_fascicle_from_connectome(streamlines, [left_cb_roi], ["endpoints"])
-    right_ceb_bool = segment_fascicle_from_connectome(streamlines, [right_cb_roi], ["endpoints"])
-
-    spino_ceb_bool = (
-        extract_stream_ind_by_name(category_prior, "cerebellum_to_spinal_interHemi") |
-        extract_stream_ind_by_name(category_prior, "cerebellum_to_spinal")
-    )
-
-    spine_top = plane_from_roi(16, "superior", atlas)
-    spine_top_bool = segment_fascicle_from_connectome(streamlines, [spine_top], ["not"])
-
-    classification = concat_classification_criteria(
-        classification, "leftSpinoCerebellar", left_ceb_bool, spino_ceb_bool, spine_top_bool
-    )
-    classification = concat_classification_criteria(
-        classification, "rightSpinoCerebellar", right_ceb_bool, spino_ceb_bool, spine_top_bool
-    )
-
     spine_limit = plane_from_roi(16, "anterior", atlas)
     posterior_streams = segment_fascicle_from_connectome(streamlines, [spine_limit], ["not"])
 
@@ -106,9 +85,10 @@ def segment_cerebellar_tracts(streamlines, atlas, experimental_bool, category_pr
         classification = concat_classification_criteria(
             classification, f"{_SIDE_LABELS[leftright]}ThalamicoCerebellar", thal_ceb_bool
         )
-        classification = concat_classification_criteria(
-            classification, f"{_SIDE_LABELS[leftright]}OccipitoCerebellar", occipito_ceb_bool
-        )
+        if leftright == 1:  # MATLAB only has rightOccipitoCerebellar
+            classification = concat_classification_criteria(
+                classification, f"{_SIDE_LABELS[leftright]}OccipitoCerebellar", occipito_ceb_bool
+            )
         classification = concat_classification_criteria(
             classification, f"{_SIDE_LABELS[leftright]}ParietoCerebellar", parieto_ceb_bool
         )
