@@ -5,7 +5,7 @@
 ###################                                                                                   ###################
 ###################     title:             Local launcher — build config.json and run main            ###################
 ###################                                                                                   ###################
-###################     usage:             main_cli.sh --track <path> --freesurfer <path>             ###################
+###################     usage:             main_cli.sh --track <path> --freesurfer <path> [--save-tck] ###################
 ###################                                                                                   ###################
 ###################     autor: gamorosino                                                             ###################
 #########################################################################################################################
@@ -15,19 +15,21 @@ SCRIPT=$(realpath -s "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT")
 
 usage() {
-    echo "Usage: $(basename $0) --track <path/to/track.tck> --freesurfer <path/to/freesurfer/>"
+    echo "Usage: $(basename $0) --track <path/to/track.tck> --freesurfer <path/to/freesurfer/> [--save-tck]"
     exit 1
 }
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 track=""
 freesurfer=""
+save_tck="false"
 
 # ── parse arguments ───────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --track)       track=$(realpath "$2");       shift 2 ;;
         --freesurfer)  freesurfer=$(realpath "$2");  shift 2 ;;
+        --save-tck)    save_tck="true";              shift ;;
         -h|--help)     usage ;;
         *) echo "Unknown argument: $1"; usage ;;
     esac
@@ -58,7 +60,8 @@ fi
 cat > config.json <<EOF
 {
   "track":      $(jq -n --arg v "$track" '$v'),
-  "freesurfer": $(jq -n --arg v "$freesurfer" '$v')
+  "freesurfer": $(jq -n --arg v "$freesurfer" '$v'),
+  "save_tck":   $save_tck
 }
 EOF
 
