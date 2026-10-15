@@ -40,13 +40,13 @@ def segment_corpus_callosum(streamlines, atlas, experimental_bool, category_prio
 
     forceps_minior_bool = apply_endpoint_criteria(
         streamlines,
-        peri_c_roi, "anterior", "both",
+        cc_ant_plane, "anterior", "both",
         olf_top, "superior", "both",
         front_middle_top_plane, "inferior", "both",
     )
 
     anterior_cc_bool = segment_fascicle_from_connectome(
-        streamlines, [anterior_cc_roi, ant_mid_cc_plane_ant, peri_c_roi], ["and", "not", "and"]
+        streamlines, [anterior_cc_roi, ant_mid_cc_plane_ant], ["and", "not"]
     )
     frontal_cc_bool = extract_stream_ind_by_name(category_prior, "frontal_to_frontal_interHemi")
 
