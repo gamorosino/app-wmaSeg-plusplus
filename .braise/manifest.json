@@ -35,6 +35,14 @@
       "datatype": "neuro/wmc",
       "datatype_tags": [],
       "archive": true
+    },
+    {
+      "id": "tracts_tck",
+      "desc": "Per-tract TCK files (one per named bundle). Only produced when save_tck is enabled.",
+      "datatype": "neuro/track/tck",
+      "datatype_tags": [],
+      "optional": true,
+      "archive": true
     }
   ]
 }
