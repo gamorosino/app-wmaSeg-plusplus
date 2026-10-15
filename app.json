@@ -1,0 +1,47 @@
+{
+  "name": "app-wmaSeg-python",
+  "inputs": [
+    {
+      "id": "track",
+      "desc": "Whole-brain tractogram (TCK format)",
+      "datatype": "neuro/track/tck",
+      "datatype_tags": [],
+      "optional": false,
+      "multi": false,
+      "advanced": false
+    },
+    {
+      "id": "freesurfer",
+      "desc": "FreeSurfer output directory (aparc.a2009s+aseg parcellation required)",
+      "datatype": "neuro/freesurfer",
+      "datatype_tags": [],
+      "optional": false,
+      "multi": false,
+      "advanced": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "classification",
+      "desc": "White matter tract classification: classification.mat, per-tract JSON files, and VTK surfaces.",
+      "datatype": "neuro/wmc",
+      "datatype_tags": [],
+      "archive": true
+    },
+    {
+      "id": "tracts_tck",
+      "desc": "Per-tract TCK files (one per named bundle). Only produced when save_tck is enabled.",
+      "datatype": "neuro/track/tck",
+      "datatype_tags": [],
+      "optional": true,
+      "archive": true
+    }
+  ],
+  "config": {
+    "save_tck": {
+      "type": "boolean",
+      "default": false,
+      "description": "Save per-tract TCK files to tracts_tck/"
+    }
+  }
+}
