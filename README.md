@@ -1,8 +1,7 @@
 [![Abcdspec-compliant](https://img.shields.io/badge/ABCD_Spec-v1.1-green.svg)](https://github.com/brain-life/abcd-spec)
+[![Run on Brainlife.io](https://img.shields.io/badge/Brainlife-bl.app.6acfe9b83db9ceda5263760f-blue.svg)](https://brainlife.io/app/6acfe9b83db9ceda5263760f)
 
-# wmaSeg++ (app-wmaSeg-plusplus)
-
-**Accelerated, Python-native white matter tract segmentation for brainlife.io.**
+# wmaSeg++
 
 `wmaSeg++` extends the white matter anatomy segmentation methodology of [Bullock et al. (2019)](https://doi.org/10.1007/s00429-019-01907-8) — originally implemented in MATLAB via the [wma_tools](https://github.com/DanNBullock/wma_tools) toolbox — with two major advances:
 
@@ -13,15 +12,63 @@
    - Vectorized endpoint lookups (direct array indexing replaces per-coordinate Python loops)
    - Parallelized bundle segmentation (11 independent tract groups run concurrently via `multiprocessing.Pool` with Linux copy-on-write fork — no serialization of large arrays)
 
-## What it does
+### Authors
+- [Gabriele Amorosino](gabriele.amorosino@utexas.edu)
 
-Given a whole-brain tractogram (TCK) and a FreeSurfer parcellation, this app:
+### Funding Acknowledgement
+brainlife.io is publicly funded and for the sustainability of the project it is helpful to acknowledge the use of the platform. We kindly ask that you acknowledge the funding below in your publications and code reusing this code.
 
-1. Converts the FreeSurfer `aparc.a2009s+aseg` parcellation to NIfTI format.
-2. Segments the tractogram into named white matter tracts using anatomical ROI criteria derived from the parcellation atlas.
-3. Generates VTK surface files for each tract and the parcellation.
+[![NSF-BCS-1734853](https://img.shields.io/badge/NSF_BCS-1734853-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1734853)
+[![NSF-BCS-1636893](https://img.shields.io/badge/NSF_BCS-1636893-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1636893)
+[![NSF-ACI-1916518](https://img.shields.io/badge/NSF_ACI-1916518-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1916518)
+[![NSF-IIS-1912270](https://img.shields.io/badge/NSF_IIS-1912270-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1912270)
+[![NIH-NIBIB-R01EB029272](https://img.shields.io/badge/NIH_NIBIB-R01EB029272-green.svg)](https://grantome.com/grant/NIH/R01-EB029272-01)
 
-Segmented tracts include: Arcuate, SLF 1/2/3, Uncinate, IFOF, Cingulum, Forceps Minor/Major, Corpus Callosum subdivisions, Corticospinal Tract, Optic Radiation (Meyer/Baum loops), pArc, TPC, ILF, MDLFang, Aslant, VOF, thalamic projections, and cerebellar tracts.
+### Citations
+We kindly ask that you cite the following articles when publishing papers and code using this code.
+
+1. Bullock, D., Takemura, H., Caiafa, C. F., Kitchell, L., McPherson, B., Caron, B., & Pestilli, F. (2019). Associative white matter connecting the dorsal and ventral posterior human cortex. *Brain Structure and Function*, 224(8), 2631–2660. [https://doi.org/10.1007/s00429-019-01907-8](https://doi.org/10.1007/s00429-019-01907-8)
+
+2. Avesani, P., McPherson, B., Hayashi, S. et al. The open diffusion data derivatives, brain data upcycling via integrated publishing of derivatives and reproducible open cloud services. *Sci Data* 6, 69 (2019). [https://doi.org/10.1038/s41597-019-0073-y](https://doi.org/10.1038/s41597-019-0073-y)
+
+#### MIT Copyright (c) 2024 brainlife.io The University of Texas at Austin
+
+## Running the App
+
+### On Brainlife.io
+
+You can submit this App online at [https://brainlife.io/app/6acfe9b83db9ceda5263760f](https://brainlife.io/app/6acfe9b83db9ceda5263760f) via the "Execute" tab.
+
+### Running Locally (on your machine)
+
+1. git clone this repo.
+2. Inside the cloned directory, create `config.json` with something like the following content with paths to your input files.
+
+```json
+{
+    "track": "./input/track/track.tck",
+    "freesurfer": "./input/freesurfer"
+}
+```
+
+3. Launch the App by executing `main`
+
+```bash
+export FREESURFER_LICENSE="<your license key>"
+./main
+```
+
+### Sample Datasets
+
+If you don't have your own input file, you can download sample datasets from Brainlife.io, or you can use [Brainlife CLI](https://github.com/brain-life/cli).
+
+```
+npm install -g brainlife
+bl login
+mkdir input
+bl dataset download <dataset-id> && mv <dataset-id> input/track
+bl dataset download <dataset-id> && mv <dataset-id> input/freesurfer
+```
 
 ## Inputs
 
@@ -30,44 +77,25 @@ Segmented tracts include: Arcuate, SLF 1/2/3, Uncinate, IFOF, Cingulum, Forceps 
 | `track` | `neuro/track/tck` | Whole-brain tractogram (TCK format) |
 | `freesurfer` | `neuro/freesurfer` | FreeSurfer output directory (requires `aparc.a2009s+aseg`) |
 
-## Outputs
+## Output
+
+All output files will be generated under the current working directory. The main output of this App is a `classification/` directory containing:
+
+- `classification.mat` — classification structure (streamline-to-tract assignment)
+- `tracts/` — one JSON file per named tract (up to 1000 streamlines each) plus a `tracts.json` index
+
+Segmented tracts include: Arcuate, SLF 1/2/3, Uncinate, IFOF, Cingulum, Forceps Minor/Major, Corpus Callosum subdivisions, Corticospinal Tract, Optic Radiation (Meyer/Baum loops), pArc, TPC, ILF, MDLFang, Aslant, VOF, thalamic projections, and cerebellar tracts.
 
 | Output | Datatype | Description |
 |--------|----------|-------------|
 | `classification` | `neuro/wmc` | Classification structure: `.mat` file, per-tract JSON files, VTK surfaces |
 
-## Running on Brainlife.io
+### Dependencies
 
-This app is available on the [brainlife.io](https://brainlife.io) platform as **White Matter Anatomy Segmentation ++**.
-
-## Running Locally
-
-Requires Singularity, a FreeSurfer license, and Python ≥ 3.6.
-
-```bash
-export FREESURFER_LICENSE="<your license key>"
-cp config.json.example config.json
-# edit config.json to set the actual paths
-./main
-```
-
-Python dependencies (installed inside the container — no local install needed):
+This App only requires [Singularity](https://www.sylabs.io/singularity/) to run. Python dependencies are bundled in the container:
 
 - [nibabel](https://nipy.org/nibabel/) ≥ 2.3
 - [numpy](https://numpy.org/) ≥ 1.11
 - [scipy](https://scipy.org/) ≥ 0.18
 
-## Authors
-
-- Gabriele Amorosino (gabriele.amorosino@utexas.edu)
-
-## Based on
-
-- **Segmentation methodology**: [wma_tools](https://github.com/DanNBullock/wma_tools) — Daniel Bullock (Indiana University)
-- **Original MATLAB app**: [app-wmaSeg](https://github.com/brainlife/app-wmaSeg) (brainlife.io [bl.app.188](https://doi.org/10.25663/brainlife.app.188)) — Daniel Bullock, Soichi Hayashi, Franco Pestilli
-
-## References
-
-Bullock, D., Takemura, H., Caiafa, C. F., Kitchell, L., McPherson, B., Caron, B., & Pestilli, F. (2019). Associative white matter connecting the dorsal and ventral posterior human cortex. *Brain Structure and Function*, 224(8), 2631–2660. https://doi.org/10.1007/s00429-019-01907-8
-
-Avesani, P., McPherson, B., Hayashi, S. et al. The open diffusion data derivatives, brain data upcycling via integrated publishing of derivatives and reproducible open cloud services. *Sci Data* 6, 69 (2019). https://doi.org/10.1038/s41597-019-0073-y
+#### MIT Copyright (c) 2024 brainlife.io The University of Texas at Austin
