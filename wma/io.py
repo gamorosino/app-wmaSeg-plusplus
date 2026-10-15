@@ -39,6 +39,13 @@ def save_classification_mat(classification, path):
     scipy.io.savemat(path, mat)
 
 
+def save_tract_tck(fibers_3xN, path):
+    """Save a list of (3, N) fiber arrays to a TCK file (RAS+ mm space)."""
+    streamlines = [f.T.astype(np.float32) for f in fibers_3xN]
+    tractogram = nib.streamlines.Tractogram(streamlines, affine_to_rasmm=np.eye(4))
+    nib.streamlines.save(nib.streamlines.TckFile(tractogram), path)
+
+
 def save_classification_json(classification, path):
     """Save classification as JSON (alternative to .mat)."""
     with open(path, "w") as f:

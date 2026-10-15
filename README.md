@@ -76,6 +76,12 @@ bl dataset download <dataset-id> && mv <dataset-id> input/freesurfer
 | `track` | `neuro/track/tck` | Whole-brain tractogram (TCK format) |
 | `freesurfer` | `neuro/freesurfer` | FreeSurfer output directory (requires `aparc.a2009s+aseg`) |
 
+## Configuration
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `save_tck` | boolean | `false` | If `true`, save each segmented tract as an individual TCK file in `tracts_tck/` |
+
 ## Output
 
 All output files will be generated under the current working directory. The main output of this App is a `classification/` directory containing:
@@ -88,6 +94,7 @@ Segmented tracts include: Arcuate, SLF 1/2/3, Uncinate, IFOF, Cingulum, Forceps 
 | Output | Datatype | Description |
 |--------|----------|-------------|
 | `classification` | `neuro/wmc` | Classification structure: `.mat` file, per-tract JSON files, VTK surfaces |
+| `tracts_tck/` | — | *(optional, `save_tck: true`)* One `.tck` file per named tract, all streamlines in RAS+ mm space |
 
 ### Dependencies
 

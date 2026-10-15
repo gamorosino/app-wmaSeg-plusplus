@@ -1,4 +1,5 @@
 {
   "track": "track/track.tck",
-  "freesurfer": "freesurfer/output"
+  "freesurfer": "freesurfer/output",
+  "save_tck": false
 }

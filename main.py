@@ -8,7 +8,7 @@ import random
 
 import numpy as np
 
-from wma.io import load_tractogram, load_atlas, save_classification_mat, save_classification_json
+from wma.io import load_tractogram, load_atlas, save_classification_mat, save_classification_json, save_tract_tck
 from wma.atlas import deisland_labels
 from wma.priors import streamline_category_priors, streamline_geometry_priors
 from wma.classification import (
@@ -83,6 +83,8 @@ def main():
     with open("config.json") as f:
         config = json.load(f)
 
+    save_tck = bool(config.get("save_tck", False))
+
     print("Loading tractogram...")
     streamlines = load_tractogram(config["track"])
 
@@ -152,6 +154,16 @@ def main():
 
     with open(os.path.join(tracts_path, "tracts.json"), "w") as f:
         json.dump(all_tracts, f)
+
+    if save_tck:
+        tck_path = "tracts_tck"
+        os.makedirs(tck_path, exist_ok=True)
+        for fg in fg_classified:
+            if not fg["fibers"]:
+                continue
+            tck_file = os.path.join(tck_path, f"{fg['name']}.tck")
+            save_tract_tck(fg["fibers"], tck_file)
+            print(f"Saved {fg['name']}.tck ({len(fg['fibers'])} streamlines)")
 
     print("All done.")
 
