@@ -30,8 +30,8 @@
     },
     {
       "id": "tracts_tck",
-      "desc": "Per-tract TCK files (one per named bundle). Only produced when save_tck is enabled.",
-      "datatype": "neuro/track/tck",
+      "desc": "Per-bundle TCK files (one per named tract), as alternative to WMC. Only produced when save_tck is enabled.",
+      "datatype": "neuro/tcks",
       "datatype_tags": [],
       "optional": true,
       "archive": true
