@@ -13,16 +13,7 @@
    - Parallelized bundle segmentation (11 independent tract groups run concurrently via `multiprocessing.Pool` with Linux copy-on-write fork — no serialization of large arrays)
 
 ### Authors
-- [Gabriele Amorosino](gabriele.amorosino@utexas.edu)
-
-### Funding Acknowledgement
-brainlife.io is publicly funded and for the sustainability of the project it is helpful to acknowledge the use of the platform. We kindly ask that you acknowledge the funding below in your publications and code reusing this code.
-
-[![NSF-BCS-1734853](https://img.shields.io/badge/NSF_BCS-1734853-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1734853)
-[![NSF-BCS-1636893](https://img.shields.io/badge/NSF_BCS-1636893-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1636893)
-[![NSF-ACI-1916518](https://img.shields.io/badge/NSF_ACI-1916518-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1916518)
-[![NSF-IIS-1912270](https://img.shields.io/badge/NSF_IIS-1912270-blue.svg)](https://nsf.gov/awardsearch/showAward?AWD_ID=1912270)
-[![NIH-NIBIB-R01EB029272](https://img.shields.io/badge/NIH_NIBIB-R01EB029272-green.svg)](https://grantome.com/grant/NIH/R01-EB029272-01)
+- Gabriele Amorosino (gabriele.amorosino@utexas.edu)
 
 ### Citations
 We kindly ask that you cite the following articles when publishing papers and code using this code.
@@ -41,17 +32,25 @@ You can submit this App online at [https://brainlife.io/app/6acfe9b83db9ceda5263
 
 ### Running Locally (on your machine)
 
+**Option 1 — CLI launcher** (generates `config.json` and runs the pipeline):
+
+```bash
+./main_cli.sh --track /path/to/track.tck --freesurfer /path/to/freesurfer/
+```
+
+**Option 2 — manual config**:
+
 1. git clone this repo.
-2. Inside the cloned directory, create `config.json` with something like the following content with paths to your input files.
+2. Create `config.json` with paths to your input files:
 
 ```json
 {
-    "track": "./input/track/track.tck",
-    "freesurfer": "./input/freesurfer"
+    "track":      "/path/to/track.tck",
+    "freesurfer": "/path/to/freesurfer/"
 }
 ```
 
-3. Launch the App by executing `main`
+3. Launch the App:
 
 ```bash
 export FREESURFER_LICENSE="<your license key>"
