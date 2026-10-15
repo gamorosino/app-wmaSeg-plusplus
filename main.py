@@ -2,6 +2,7 @@
 """White matter segmentation pipeline — Python port of main.m."""
 
 import json
+import multiprocessing as mp
 import os
 import random
 
@@ -26,6 +27,57 @@ from wma.segmentations.vof import segment_vof
 from wma.segmentations.cst import segment_cst
 from wma.segmentations.cingulum import segment_cingulum
 
+# ---------------------------------------------------------------------------
+# Module-level globals for multiprocessing (set before Pool creation; workers
+# inherit them via fork — no pickling of large data structures).
+# ---------------------------------------------------------------------------
+_g_streamlines = None
+_g_atlas = None
+_g_category_prior = None
+_g_eff_prior = None
+
+_STEP_NAMES = [
+    "segment_ant_post_tracts",
+    "segment_corpus_callosum",
+    "segment_subcortical",
+    "segment_aslant",
+    "segment_mdlf_ilf",
+    "segment_arc_tpc",
+    "segment_optic_radiation",
+    "segment_cerebellar_tracts",
+    "segment_vof",
+    "segment_cst",
+    "segment_cingulum",
+]
+
+
+def _seg_dispatch(task_id):
+    """Run one segmentation function; large data inherited via fork."""
+    s, a, cp, ep = _g_streamlines, _g_atlas, _g_category_prior, _g_eff_prior
+    if task_id == 0:
+        return segment_ant_post_tracts(s, a, cp, ep)
+    if task_id == 1:
+        return segment_corpus_callosum(s, a, experimental_bool=True, category_prior=cp)
+    if task_id == 2:
+        return segment_subcortical(s, a, cp, ep)
+    if task_id == 3:
+        return segment_aslant(s, a, cp)
+    if task_id == 4:
+        return segment_mdlf_ilf(s, a, cp)
+    if task_id == 5:
+        return segment_arc_tpc(s, a)
+    if task_id == 6:
+        return segment_optic_radiation(s, a, expand_seg_bool=False, category_prior=cp)
+    if task_id == 7:
+        return segment_cerebellar_tracts(s, a, experimental_bool=False, category_prior=cp)
+    if task_id == 8:
+        return segment_vof(s, a, cp)
+    if task_id == 9:
+        return segment_cst(s, a, cp)
+    if task_id == 10:
+        return segment_cingulum(s, a, cp)
+    raise ValueError(f"Unknown task_id: {task_id}")
+
 
 def main():
     with open("config.json") as f:
@@ -47,57 +99,31 @@ def main():
     category_prior = streamline_category_priors(streamlines, atlas, inflate_iter=2)
     _, eff_prior = streamline_geometry_priors(streamlines)
 
-    print("1) segment_ant_post_tracts...")
-    out = segment_ant_post_tracts(streamlines, atlas, category_prior, eff_prior)
-    classification = reconcile_classifications(classification, out)
+    # Set module globals before forking so workers inherit the data copy-on-write.
+    global _g_streamlines, _g_atlas, _g_category_prior, _g_eff_prior
+    _g_streamlines = streamlines
+    _g_atlas = atlas
+    _g_category_prior = category_prior
+    _g_eff_prior = eff_prior
 
-    print("2) segment_corpus_callosum...")
-    out = segment_corpus_callosum(streamlines, atlas, experimental_bool=True,
-                                  category_prior=category_prior)
-    classification = reconcile_classifications(classification, out)
+    n_workers = min(11, os.cpu_count() or 1)
 
-    print("3) segment_subcortical...")
-    out = segment_subcortical(streamlines, atlas, category_prior, eff_prior)
-    classification = reconcile_classifications(classification, out)
+    if n_workers > 1:
+        print(f"Running {len(_STEP_NAMES)} segmentation steps in parallel ({n_workers} workers)...")
+        with mp.Pool(processes=n_workers) as pool:
+            seg_results = pool.map(_seg_dispatch, range(len(_STEP_NAMES)))
+    else:
+        print(f"Running {len(_STEP_NAMES)} segmentation steps sequentially...")
+        seg_results = [_seg_dispatch(i) for i in range(len(_STEP_NAMES))]
 
-    print("4) segment_aslant...")
-    out = segment_aslant(streamlines, atlas, category_prior)
-    classification = reconcile_classifications(classification, out)
+    for i, out in enumerate(seg_results):
+        print(f"Reconciling: {_STEP_NAMES[i]}")
+        classification = reconcile_classifications(classification, out)
 
-    print("5) segment_mdlf_ilf...")
-    out = segment_mdlf_ilf(streamlines, atlas, category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("6) segment_arc_tpc...")
-    out = segment_arc_tpc(streamlines, atlas)
-    classification = reconcile_classifications(classification, out)
-
-    print("7) segment_optic_radiation...")
-    out = segment_optic_radiation(streamlines, atlas, expand_seg_bool=False,
-                                  category_prior=category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("8) segment_cerebellar_tracts...")
-    out = segment_cerebellar_tracts(streamlines, atlas, experimental_bool=False,
-                                    category_prior=category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("9) segment_vof...")
-    out = segment_vof(streamlines, atlas, category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("10) segment_cst...")
-    out = segment_cst(streamlines, atlas, category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("11) segment_cingulum (final pass)...")
-    out = segment_cingulum(streamlines, atlas, category_prior)
-    classification = reconcile_classifications(classification, out)
-
-    print("12) resort_classification...")
+    print("resort_classification...")
     classification = resort_classification(classification)
 
-    print("13) Generating output...")
+    print("Generating output...")
     os.makedirs("classification", exist_ok=True)
     save_classification_mat(classification, "classification/classification.mat")
 
