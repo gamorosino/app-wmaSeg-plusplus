@@ -5,7 +5,8 @@
   "desc": "White matter tract segmentation (Python port of wma_tools). Segments a whole-brain tractogram into named white matter tracts using a FreeSurfer parcellation atlas.",
   "config": {
     "track": { "type": "input", "file_id": "track", "input_id": "track" },
-    "freesurfer": { "type": "input", "file_id": "output", "input_id": "freesurfer" }
+    "freesurfer": { "type": "input", "file_id": "output", "input_id": "freesurfer" },
+    "save_tck": { "type": "boolean", "default": false, "desc": "Save per-tract TCK files to tracts_tck/" }
   },
   "inputs": [
     {
