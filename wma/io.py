@@ -33,7 +33,7 @@ def save_classification_mat(classification, path):
     mat = {
         "classification": {
             "names": np.array(classification["names"], dtype=object),
-            "index": classification["index"].astype(np.int32),
+            "index": classification["index"].astype(np.uint8),
         }
     }
     scipy.io.savemat(path, mat)

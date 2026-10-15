@@ -85,10 +85,9 @@ def segment_cerebellar_tracts(streamlines, atlas, experimental_bool, category_pr
         classification = concat_classification_criteria(
             classification, f"{_SIDE_LABELS[leftright]}ThalamicoCerebellar", thal_ceb_bool
         )
-        if leftright == 1:  # MATLAB only has rightOccipitoCerebellar
-            classification = concat_classification_criteria(
-                classification, f"{_SIDE_LABELS[leftright]}OccipitoCerebellar", occipito_ceb_bool
-            )
+        classification = concat_classification_criteria(
+            classification, f"{_SIDE_LABELS[leftright]}OccipitoCerebellar", occipito_ceb_bool
+        )
         classification = concat_classification_criteria(
             classification, f"{_SIDE_LABELS[leftright]}ParietoCerebellar", parieto_ceb_bool
         )

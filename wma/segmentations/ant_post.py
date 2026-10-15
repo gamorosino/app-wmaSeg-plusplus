@@ -75,9 +75,15 @@ def segment_ant_post_tracts(streamlines, atlas, category_prior, eff_prior):
         inf_cc_limit = plane_from_roi(255, "inferior", atlas)
         inf_temp_roi = modify_roi(atlas, ant_temp_plane, inf_cc_limit, "inferior")
 
-        # ifof_bool is used only as exclusion for SLF1&2 and SLF3; not output
         ifof_bool = segment_fascicle_from_connectome(
             streamlines, [inf_temp_roi, cc_carve_out], ["and", "not"]
+        )
+        fronto_occipital = extract_stream_ind_by_name(
+            category_prior, f"{_SIDE_LABELS[leftright]}frontal_to_occipital"
+        )
+        classification = concat_classification_criteria(
+            classification, f"{_SIDE_LABELS[leftright]}IFOF",
+            fronto_occipital, ifof_bool,
         )
 
         # ---- Arcuate ----
