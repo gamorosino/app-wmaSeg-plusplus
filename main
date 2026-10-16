@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l nodes=1:ppn=8,vmem=64gb,walltime=48:00:00
+#PBS -l nodes=1:ppn=8,vmem=64gb,walltime=03:00:00
 #PBS -N wmaSeg-python
 
 [ -z "$FREESURFER_LICENSE" ] && echo "Please set FREESURFER_LICENSE in .bashrc" && exit 1
